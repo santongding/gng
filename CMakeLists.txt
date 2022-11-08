@@ -13,8 +13,8 @@ function(do_test target_name arg result)
         target_link_libraries(${target} ${PROJECT_NAME})
     endif()
 
-    add_test(NAME Test_${target_name}_${arg} COMMAND ${target} ${arg})
-    set_tests_properties(Test_${target_name}_${arg} 
+    add_test(NAME ${PROJECT_NAME}_${target_name}_${arg} COMMAND ${target} ${arg})
+    set_tests_properties(${PROJECT_NAME}_${target_name}_${arg} 
         PROPERTIES PASS_REGULAR_EXPRESSION ${result}
     )
 endfunction()
