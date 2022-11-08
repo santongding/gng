@@ -1,11 +1,47 @@
 #include "data-struct.h"
 #include "debug/log.h"
 #include "assert.h"
-#include "commit-ops.h"
+#include "utils.h"
 using std::vector;
+void file_single::to_file(FILE *fd, file_location parent, const get_file_by_loc_handler_t &handler)
+{
+    to_file_content(fd, parent, handler);
+}
+file_single *file_single::from_file(FILE *fd, file_location parent, const get_file_by_loc_handler_t &handler)
+{
+    static char buf[256];
+    vector<char>data;
+    int n;
+    file_type type = TEXT;
+    while((n = fread(buf, sizeof(char), 256, fd))>0){
+        verbose("read %d bits", n);
+        if(type == TEXT)
+        for(int i = 0; i < n ;i++){
+            if(!(buf[i]>=ASCII_BG&&buf[i]<ASCII_ED)){
+                type = BINARY;
+            }
+        }
+        push_back_n(data, buf, n);
+    }
+
+    verbose("type:%d", type);
+    data.push_back(type);
+    switch (type)
+    {
+    case BINARY:
+        return dynamic_cast<file_single *>(new file_binary(data));
+        break;
+    case TEXT:
+        panic("wrong file type:%d\n", type);
+    default:
+        panic("wrong file type:%d\n", type);
+        break;
+    }
+}
 vector<char> file_single::to_bytes()
 {
-    vector<char> ret_data = encode_content();
+    vector<char> ret_data = to_bytes_content();
+    verbose("siz:%ld\n", ret_data.size());
     ret_data.push_back(type_identity());
     return ret_data;
 }
@@ -23,6 +59,7 @@ file_single *file_single::from_bytes(const std::vector<char> &data)
         break;
     case TEXT:
         return dynamic_cast<file_single *>(new file_text(data));
+        break;
     default:
         panic("wrong file type:%d\n", type);
         break;
@@ -35,51 +72,17 @@ file_binary::file_binary(const vector<char> &data) : file_single()
     _data.pop_back();
 }
 
-vector<char> file_binary::encode_content()
+vector<char> file_binary::to_bytes_content()
 {
     return _data;
 }
-static void push_back(vector<char> &data, char *p, int n)
+
+void file_binary::to_file_content(FILE *fd, file_location parent, const get_file_by_loc_handler_t &handler)
 {
-    for (char *i = p; i != p + n; i++)
-    {
-        data.push_back(*i);
-    }
+    fwrite(&_data[0], sizeof(char), _data.size(), fd);
 }
 
-template <class T>
-static void push_back(vector<char> &data, T v)
-{
-    push_back(data, (char *)&v, sizeof(T));
-}
-
-template <class T>
-static void read_head(T &dst, const vector<char> &data, int &l, int r)
-{
-    if (l + sizeof(T) > r)
-    {
-        panic("l:%d, r:%d, siz:%ld type name:%s\n", l, r, sizeof(T), typeid(T).name());
-    }
-    else
-    {
-        verbose("l:%d, r:%d, siz:%ld type name:%s", l, r, sizeof(T), typeid(T).name());
-        dst = *(T *)&data[l];
-        for (int i = l; i < l + sizeof(T); i++)
-        {
-            verbose("i:%d v:%d", i, data[i]);
-        }
-        l += sizeof(T);
-        return;
-    }
-}
-
-static vector<char> read_head_n(int n, const vector<char> &data, int &l, int r)
-{
-    assert(n + l <= r);
-    l += n;
-    return vector<char>(data.begin() + l - n, data.begin() + l);
-}
-segment decode_from_bytes(const vector<char> &data, int &l, int r)
+static segment decode_from_bytes(const vector<char> &data, int &l, int r)
 {
     char hd;
     read_head(hd, data, l, r);
@@ -119,10 +122,10 @@ file_text::file_text(const vector<char> &data) : file_single()
     }
 }
 
-vector<char> file_text::encode_content()
+vector<char> file_text::to_bytes_content()
 {
     vector<char> ret;
-    verbose("seg num:%ld",segments.size());
+    verbose("seg num:%ld", segments.size());
     for (auto &seg : segments)
     {
         ret.push_back(seg.is_link ? 1 : 0);
@@ -134,7 +137,7 @@ vector<char> file_text::encode_content()
             for (auto &s : seg.texts)
             {
                 push_back(ret, (int)s.length());
-                push_back(ret, &s[0], s.length());
+                push_back_n(ret, &s[0], s.length());
             }
         }
         else
@@ -147,4 +150,8 @@ vector<char> file_text::encode_content()
         verbose("encode i:%d v:%d", i, ret[i]);
     }
     return ret;
+}
+
+void file_text::to_file_content(FILE *fd, file_location parent, const get_file_by_loc_handler_t &handler)
+{
 }

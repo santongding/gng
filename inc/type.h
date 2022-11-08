@@ -5,6 +5,10 @@ typedef uint64_t commit_handle;
 typedef uint64_t file_handle;
 typedef uint64_t line_index;
 
+#define ASCII_BG 32
+#define ASCII_ED 127
+
+
 enum file_type
 {
     BINARY = 1,

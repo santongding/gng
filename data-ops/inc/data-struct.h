@@ -22,7 +22,8 @@ public:
     std::vector<char> data;
 
 private:
-    std::vector<char> encode_content() override;
+    std::vector<char> to_bytes_content() override;
+    void to_file_content(FILE *fd, file_location parent, const get_file_by_loc_handler_t &handler) override;
     file_type type_identity() override
     {
         return BINARY;
@@ -35,7 +36,8 @@ public:
     file_text(const std::vector<char> &data);
 
 private:
-    std::vector<char> encode_content() override;
+    std::vector<char> to_bytes_content() override;
+    void to_file_content(FILE *fd, file_location parent, const get_file_by_loc_handler_t &handler) override;
     file_type type_identity() override
     {
         return TEXT;
