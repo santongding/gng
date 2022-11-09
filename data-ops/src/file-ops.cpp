@@ -62,7 +62,7 @@ vector<char> file_single::to_bytes()
     return ret_data;
 }
 
-file_single *file_single::from_bytes(std::vector<char> data, loc_enclave loc)
+file_single *file_single::from_bytes(bytes data, loc_enclave loc)
 {
 
     file_type type = (file_type)data[data.size() - 1];
@@ -83,7 +83,7 @@ file_single *file_single::from_bytes(std::vector<char> data, loc_enclave loc)
     }
 }
 
-file_binary::file_binary(const std::vector<char> &data, loc_enclave loc) : file_binary(loc)
+file_binary::file_binary(const bytes &data, loc_enclave loc) : file_binary(loc)
 {
     _data = data;
 }
