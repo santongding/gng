@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+import "file.proto";
+package data;
+
+message commit{
+    repeated file_single files = 1;
+}

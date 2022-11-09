@@ -5,6 +5,11 @@ cmake_minimum_required(VERSION 3.15)
 project(gng VERSION 1.0)
 set(CMAKE_CXX_STANDARD 17)
 
+
+
+
+
+
 function(do_test target_name arg result)
     set(target ${target_name}_test)
 
@@ -41,10 +46,15 @@ endmacro()
 
 include_directories("${PROJECT_SOURCE_DIR}/inc")
 
+
 add_subdirectory("commit-ops")
 add_subdirectory("data-ops")
+add_subdirectory("data-proto")
+
 
 add_executable(gng src/main.cpp)
+target_link_directories(gng PRIVATE ${PROJECT_SOURCE_DIR}/data-proto/build)
+target_link_libraries(gng PRIVATE proto-lib)
 
 link_lib(data-ops)
 
