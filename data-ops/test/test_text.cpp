@@ -2,7 +2,6 @@
 #include <bits/stdc++.h>
 #include "debug/log.h"
 
-
 int main()
 {
     std::vector<char> d = {
@@ -17,10 +16,14 @@ int main()
         23, 0, 0, 0, 0, 0, 0, 0,
         2};
     auto origin = d;
+    get_file_by_loc_handler_t handler = [](file_location loc)
+    {
+        return (file_single *)NULL;
+    };
     for (int i = 0; i < 10; i++)
     {
 
-        auto ft = file_single::from_bytes(d);
+        auto ft = file_single::from_bytes(d, {{}, handler});
         d = ft->to_bytes();
         delete ft;
     }
