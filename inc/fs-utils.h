@@ -39,7 +39,6 @@ bool is_path_ignored(const file_path_t &path, const ignore_pattern_t &ignore)
 {
     for (auto &re : ignore)
     {
-
         if (std::regex_match(path, re))
         {
             return true;
@@ -57,6 +56,8 @@ std::vector<file_path_t> get_files_relative_path_under_dir(const file_path_t &pa
         {
             file_path_t p = i->path();
             normalize_path(p, path);
+            if (is_path_ignored(p, ignore))
+                continue;
             ret.push_back(p);
         }
     }
