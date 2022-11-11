@@ -1,53 +1,41 @@
 #include "data-ops.h"
 #include <bits/stdc++.h>
 #include "debug/log.h"
-
+#include "utils.h"
 int main()
 {
-    std::string path = "/tmp/temp_test";
-    std::vector<char> d = {'c', 'b', 0, 1};
-    file_single * fb0;
+    const std::string path = "/tmp/temp_test";
+
+    data::file_single parent;
+
+    parent.set_parent(0);
+    parent.CheckInitialized();
+    auto b = new data::file_binary();
+    std::string content = "1232313212";
+    content[3] = 0;
+    b->set_content(content);
+    parent.set_allocated_binary(b);
+    get_file_by_loc_handler_t null_handler = [](file_location loc)
+    {
+        return (file_single_helper *)NULL;
+    };
+    auto p_helper = file_single_helper(parent.SerializeAsString(), 1, &null_handler);
+
+    verbose("init parent helper");
     get_file_by_loc_handler_t handler = [&](file_location loc)
     {
-        if (loc.commit == 0)
+        if (loc.commit != 0)
+            return &p_helper;
+        else
         {
-            return (file_single *)NULL;
+            return (file_single_helper *)NULL;
         }
-        return (file_single *)fb0;
     };
-    auto fb = file_single::from_bytes(d, { handler,{}});
-    auto fd = fopen(path.c_str(), "w");
-    if (fd == NULL)
-    {
-        panic("fail to open from path:%s", path.c_str());
-    }
-    fb0 = fb;
 
-    fb = file_single::from_bytes({1}, {handler,{1}});
-    fb->to_file(fd);
+    p_helper.to_file({path, 1});
 
-    fclose(fd);
-    delete fb;
-
-    fd = fopen(path.c_str(), "r");
-    if (fd == NULL)
-    {
-        panic("fail to open from path:%s", path.c_str());
-    }
-    fb = file_single::from_file(fd,{handler,{}});
-    auto nd = fb->to_bytes();
-    verbose("nd siz:%ld\n", nd.size());
-    assert(nd.size() == 1);
-    delete fb0;
-    fb0 = NULL;
-    delete fb;
-    fb = file_single::from_file(fd, { handler,{}});
-    assert(d.size() == nd.size());
-    for (int i = 0; i < d.size(); i++)
-    {
-        verbose("v:%d %d", (int)d[i], (int)nd[i]);
-        assert(d[i] == nd[i]);
-    }
-    fclose(fd);
-    delete fb;
+    auto son = file_single_helper(file_desc{path, 1}, 1, &handler);
+    auto fb = read_binary({path, 1});
+    son.to_file({path, 1});
+    EQ(fb, read_binary({path, 1}));
 }

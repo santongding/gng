@@ -1,13 +1,36 @@
 #pragma once
 #include <vector>
+#include <type.h>
+#include <debug/log.h>
 using std::vector;
+
+#include <iostream>
+#include <fstream>
+void write_binary(const file_desc &fd, const bytes &data)
+{
+    std::ofstream ofs(fd.path, std::ios::binary | std::ios::out);
+    if (!ofs)
+    {
+        panic("fail to open file:%s", fd.path.c_str());
+    }
+    ofs.write(data.c_str(), data.size());
+}
+std::string read_binary(const file_desc &fd)
+{
+    std::ifstream ifs(fd.path, std::ios::binary | std::ios::in);
+    if (!ifs)
+    {
+        panic("fail to open file:%s",  fd.path.c_str());
+    }
+    return std::string(std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>());
+}
+
 bytes_hash mod0 = 1349880437;
 bytes_hash mod1 = 1e9 + 7;
 bytes_hash base = 19260817;
-bytes_hash get_hash(vector<char> &data)
+bytes_hash get_hash(const std::string &data)
 {
-    bytes_hash ans0 = 0, ans1 = 0;
-    ;
+    bytes_hash ans0 = mod1, ans1 = mod0;
     for (auto c : data)
     {
         ans0 = (ans0 * base + c) % mod0;

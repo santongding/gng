@@ -4,7 +4,7 @@
 
 int main()
 {
-    std::vector<char> d = {
+    bytes d = {
         0,
         2, 0, 0, 0,
         2, 0, 0, 0,

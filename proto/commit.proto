@@ -3,6 +3,8 @@ syntax = "proto3";
 import "file.proto";
 package data;
 
+
 message commit{
-    repeated file_single files = 1;
+    map<uint64, file_single> files = 1;
+    uint64 parent = 2;
 }
