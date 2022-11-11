@@ -1,10 +1,10 @@
 #include "data-ops.h"
 #include <bits/stdc++.h>
 #include "debug/log.h"
+#include "file.pb.h"
 #include "utils.h"
 int main()
 {
-    const std::string path = "/tmp/temp_test";
 
     data::file_single parent;
 
@@ -32,10 +32,13 @@ int main()
         }
     };
 
-    p_helper.to_file({path, 1});
+    file_desc desc{.handle = 1};
+    p_helper.to_file(desc);
 
-    auto son = file_single_helper(file_desc{path, 1}, 1, &handler);
-    auto fb = read_binary({path, 1});
-    son.to_file({path, 1});
-    EQ(fb, read_binary({path, 1}));
+    desc.data = "";
+    auto son = file_single_helper(desc, 1, &handler);
+    auto fb = desc.data;
+    desc.data = "";
+    son.to_file(desc);
+    EQ(fb, desc.data);
 }

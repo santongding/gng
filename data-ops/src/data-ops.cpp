@@ -7,9 +7,9 @@ class file_single_helper::file_single_helper_impl
 public:
     data::file_single _file;
     const get_file_by_loc_handler_t *_handler = nullptr;
-    file_handle _file_handle;
+    file_handle_t _file_handle;
 
-    const bytes &get_content()
+    const bytes_t &get_content()
     {
         if (get_parent() == NULL)
         {
@@ -27,7 +27,7 @@ private:
     {
         NE(_file_handle, 0);
         NE(_handler, nullptr);
-        verbose("file has parent:%d handle:%d", _file.has_parent(), _file_handle);
+        verbose("file has parent:%d handle:%llu", _file.has_parent(), _file_handle);
 
         if (_file.has_parent() == false)
         {
@@ -39,7 +39,7 @@ private:
     }
 };
 file_single_helper::~file_single_helper() = default;
-commit_handle file_single_helper::get_parent_commit_handle()
+commit_handle_t file_single_helper::get_parent_commit_handle() const
 {
     if (_impl->_file.has_parent())
     {
@@ -48,10 +48,10 @@ commit_handle file_single_helper::get_parent_commit_handle()
     }
     else
     {
-       return 0;
+        return 0;
     }
 }
-file_single_helper::file_single_helper(bytes data, file_handle file_handle, const get_file_by_loc_handler_t *handler) : _impl(std::make_unique<file_single_helper::file_single_helper_impl>()) // from bytes to structured object
+file_single_helper::file_single_helper(bytes_t data, file_handle_t file_handle, const get_file_by_loc_handler_t *handler) : _impl(std::make_unique<file_single_helper::file_single_helper_impl>()) // from bytes to structured object
 {
     _impl->_handler = handler;
     _impl->_file_handle = file_handle;
@@ -65,14 +65,14 @@ file_single_helper::file_single_helper(bytes data, file_handle file_handle, cons
     // _impl->set_content_hash();
 }
 
-file_single_helper::file_single_helper(const file_desc &fd, commit_handle commit_handle, const get_file_by_loc_handler_t *handler) : _impl(std::make_unique<file_single_helper::file_single_helper_impl>()) // from bytes to structured object
+file_single_helper::file_single_helper(const file_desc &fd, commit_handle_t commit_handle, const get_file_by_loc_handler_t *handler) : _impl(std::make_unique<file_single_helper::file_single_helper_impl>()) // from bytes to structured object
 {
 
     verbose("init by fd");
     _impl->_handler = handler;
 
     _impl->_file_handle = fd.handle;
-    auto data = read_binary(fd);
+    auto &data = fd.data;
     if (commit_handle && get_hash((*_impl->_handler)({commit_handle, fd.handle})->_impl->get_content()) == get_hash(data))
     {
         _impl->_file.set_parent(commit_handle);
@@ -86,12 +86,15 @@ file_single_helper::file_single_helper(const file_desc &fd, commit_handle commit
     EQ(_impl->_file.has_binary() ^ _impl->_file.has_parent(), true);
 }
 
-void file_single_helper::to_file(const file_desc &fd)
+void file_single_helper::to_file(file_desc &fd) const
 {
-    write_binary(fd, _impl->get_content());
+    EQ(fd.data,"");
+    fd.data = _impl->get_content();
 }
 
-const data::file_single file_single_helper::get_proto_object()
+bytes_t file_single_helper::to_bytes() const
 {
-    return _impl->_file;
+    _impl->_file.CheckInitialized();
+    EQ(_impl->_file.has_binary() ^ _impl->_file.has_parent(), true);
+    return _impl->_file.SerializeAsString();
 }

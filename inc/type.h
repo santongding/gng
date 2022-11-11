@@ -1,13 +1,20 @@
 #pragma once
 #include <stdint.h>
 #include <string>
+#include <regex>
 
-typedef uint64_t commit_handle;
-typedef uint64_t file_handle;
-typedef uint64_t line_index;
-typedef uint64_t bytes_hash;
-typedef std::string bytes;
-typedef struct {const std::string path;const file_handle handle;} file_desc;
+typedef uint64_t commit_handle_t;
+typedef uint64_t file_handle_t;
+typedef uint64_t bytes_hash_t;
+typedef std::string bytes_t;
+
+typedef std::vector<std::regex> ignore_pattern_t;
+typedef std::string file_path_t;
+typedef struct
+{
+    bytes_t data;
+    const file_handle_t handle;
+} file_desc;
 
 #define NONE_HANDLE (-1)
 
@@ -22,6 +29,6 @@ enum file_type
 
 struct file_location
 {
-    commit_handle commit;
-    file_handle file;
+    commit_handle_t commit;
+    file_handle_t file;
 };

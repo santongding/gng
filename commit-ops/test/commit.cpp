@@ -3,7 +3,7 @@
 #include "debug/debug-help.h"
 #include "commit.pb.h"
 commit_helper *p, *s;
-get_commit_by_loc_handler_t handler = [](commit_handle handle)
+get_commit_by_loc_handler_t handler = [](commit_handle_t handle)
 {
     verbose("invoked");
     if (handle == 1)
@@ -68,4 +68,5 @@ int main()
         EQ(i.second.has_binary(), false);
         EQ(i.second.parent(), 1);
     }
+
 }

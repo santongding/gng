@@ -102,6 +102,7 @@
         "span": "cpp",
         "stack": "cpp",
         "variant": "cpp",
-        "*.inc": "cpp"
+        "*.inc": "cpp",
+        "filesystem": "cpp"
     }
 }

@@ -21,5 +21,5 @@ int main()
     f.set_allocated_binary(b);
     auto fb = file_single_helper(f.SerializeAsString(), 1, &handler);
     NE(f.SerializeAsString(), "");
-    EQ(f.SerializeAsString(), fb.get_proto_object().SerializeAsString());
+    EQ(f.SerializeAsString(), fb.to_bytes());
 }

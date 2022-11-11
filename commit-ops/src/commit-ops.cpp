@@ -9,7 +9,7 @@ public:
     bool _is_committed;
     data::commit _commit;
     const get_commit_by_loc_handler_t *_commit_handler = nullptr;
-    std::map<file_handle, std::unique_ptr<file_single_helper>> _files;
+    std::map<file_handle_t, std::unique_ptr<file_single_helper>> _files;
 
     const get_file_by_loc_handler_t _file_handler = [&](file_location loc)
     {
@@ -18,9 +18,9 @@ public:
         return this->get_file_by_loc(loc.commit, loc.file);
     };
 
-    file_single_helper *get_file_by_loc(const commit_handle commit, file_handle file) // commit == 0 means find in current commit
+    file_single_helper *get_file_by_loc(const commit_handle_t commit, file_handle_t file) // commit == 0 means find in current commit
     {
-        verbose("parent:%d, commit:%d, f:%d", _commit.parent(), commit, file);
+        verbose("parent:%llu, commit:%llu, f:%llu", _commit.parent(), commit, file);
         if (commit == 0)
         {
             return get_file_in_current(file);
@@ -46,7 +46,7 @@ public:
             return nullptr;
         }
     }
-    file_single_helper *get_file_in_current(file_handle file)
+    file_single_helper *get_file_in_current(file_handle_t file)
     {
         EQ(_is_committed, true);
         if (_files.find(file) == _files.end())
@@ -72,7 +72,7 @@ public:
     }
 
 private:
-    commit_helper *get_commit(commit_handle handle)
+    commit_helper *get_commit(commit_handle_t handle)
     {
         NE(_commit_handler, nullptr);
 
@@ -81,7 +81,7 @@ private:
 };
 commit_helper::~commit_helper() = default;
 
-commit_helper::commit_helper(bytes data, const get_commit_by_loc_handler_t *handler) : _impl(std::make_unique<commit_helper_impl>())
+commit_helper::commit_helper(bytes_t data, const get_commit_by_loc_handler_t *handler) : _impl(std::make_unique<commit_helper_impl>())
 {
     verbose("commit init by data");
     _impl->_is_committed = true;
@@ -92,7 +92,7 @@ commit_helper::commit_helper(bytes data, const get_commit_by_loc_handler_t *hand
     }
 }
 
-commit_helper::commit_helper(commit_handle parent, const get_commit_by_loc_handler_t *handler) : _impl(std::make_unique<commit_helper_impl>())
+commit_helper::commit_helper(commit_handle_t parent, const get_commit_by_loc_handler_t *handler) : _impl(std::make_unique<commit_helper_impl>())
 {
     _impl->_is_committed = false;
     _impl->_commit_handler = handler;
@@ -103,12 +103,12 @@ void commit_helper::commit_file(const file_desc &fd)
 {
     EQ(_impl->_is_committed, false);
     EQ(_impl->_files.find(fd.handle), _impl->_files.end());
-    commit_handle file_parent_commit = 0;
-    verbose("commit parent:%d", _impl->_commit.parent());
+    commit_handle_t file_parent_commit = 0;
+    verbose("commit parent:%llu", _impl->_commit.parent());
     if (_impl->get_parent())
     {
         auto p_f = _impl->get_parent()->_impl->get_file_in_current(fd.handle);
-        
+
         if (p_f == nullptr)
         {
             file_parent_commit = 0;
@@ -127,14 +127,19 @@ void commit_helper::commit_file(const file_desc &fd)
     _impl->_files.insert({fd.handle, std::unique_ptr<file_single_helper>(new file_single_helper(fd, file_parent_commit, &_impl->_file_handler))});
 }
 
-bytes commit_helper::commit()
+bytes_t commit_helper::commit()
 {
     EQ(_impl->_is_committed, false);
     _impl->_is_committed = true;
     while (!_impl->_files.empty())
     {
         auto it = _impl->_files.begin();
-        _impl->_commit.mutable_files()->insert({it->first, it->second->get_proto_object()});
+        auto obj = data::file_single();
+        if (!obj.ParseFromString(it->second->to_bytes()))
+        {
+            panic("fail to pares");
+        }
+        _impl->_commit.mutable_files()->insert({it->first, obj});
         _impl->_files.erase(it);
     }
     return _impl->_commit.SerializeAsString();
