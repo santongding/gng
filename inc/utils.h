@@ -62,11 +62,11 @@ static void read_head(T &dst, const vector<char> &data, int &l, int r)
     }
     else
     {
-        verbose("l:%d, r:%d, siz:%ld type name:%s", l, r, sizeof(T), typeid(T).name());
+        debug_verbose("l:%d, r:%d, siz:%ld type name:%s", l, r, sizeof(T), typeid(T).name());
         dst = *(T *)&data[l];
         for (int i = l; i < l + sizeof(T); i++)
         {
-            verbose("i:%d v:%d", i, data[i]);
+            debug_verbose("i:%d v:%d", i, data[i]);
         }
         l += sizeof(T);
         return;

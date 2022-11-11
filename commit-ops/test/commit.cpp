@@ -5,7 +5,7 @@
 commit_helper *p, *s;
 get_commit_by_loc_handler_t handler = [](commit_handle_t handle)
 {
-    verbose("invoked");
+    debug_verbose("invoked");
     if (handle == 1)
         return p;
     else if (handle >= 2)
@@ -27,7 +27,7 @@ int main()
 
     for (uint64_t i = 1; i <= fns.size(); i++)
     {
-        verbose("file name:%s", fns[i - 1].c_str());
+        debug_verbose("file name:%s", fns[i - 1].c_str());
         p->commit_file(file_desc{fns[i - 1], i});
         // if (handler.target_type().name()[0] == '3')
         //   panic("handler name:%s", handler.target_type().name());
@@ -37,7 +37,7 @@ int main()
 
     for (uint64_t i = 1; i <= fns.size(); i++)
     {
-        // verbose("file name:%s", fns[i - 1].c_str());
+        // debug_verbose("file name:%s", fns[i - 1].c_str());
         s->commit_file(file_desc{fns[i - 1], i});
     }
     auto b = s->commit();
@@ -51,11 +51,11 @@ int main()
         EQ(i.second.parent(), 1);
     }
     auto ss = new commit_helper(2, &handler);
-    verbose("ss added");
+    debug_verbose("ss added");
 
     for (uint64_t i = 1; i <= fns.size(); i++)
     {
-        // verbose("file name:%s", fns[i - 1].c_str());
+        // debug_verbose("file name:%s", fns[i - 1].c_str());
         ss->commit_file(file_desc{fns[i - 1], i});
     }
     b = ss->commit();

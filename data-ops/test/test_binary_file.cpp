@@ -21,7 +21,7 @@ int main()
     };
     auto p_helper = file_single_helper(parent.SerializeAsString(), 1, &null_handler);
 
-    verbose("init parent helper");
+    debug_verbose("init parent helper");
     get_file_by_loc_handler_t handler = [&](file_location loc)
     {
         if (loc.commit != 0)

@@ -65,7 +65,7 @@ add_subdirectory("data-ops")
 add_subdirectory("commit-ops")
 
 
-add_executable(gng src/main.cpp)
+add_executable(gng src/main.cpp src/config.cpp)
 
 link_lib(proto)
 

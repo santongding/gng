@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package config;
+
+
+message config{
+    uint64 commit_handle = 1;
+    bool enable_compress = 2;
+    bool enable_encrypt = 3;
+    bool verbose = 4;
+}

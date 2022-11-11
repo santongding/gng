@@ -7,7 +7,7 @@
 
 #define debug(fmt, ...) fprintf(stderr, "[debug %s:%d]" fmt "\n", __FILENAME__, __LINE__, ##__VA_ARGS__)
 #define panic(fmt, ...) (fprintf(stderr, "[error %s:%d]" fmt "\n", __FILENAME__, __LINE__, ##__VA_ARGS__), assert(0))
-#define verbose(fmt, ...) fprintf(stderr, "[verbose %s:%d]" fmt "\n", __FILENAME__, __LINE__, ##__VA_ARGS__)
+#define debug_verbose(fmt, ...) fprintf(stderr, "[verbose %s:%d]" fmt "\n", __FILENAME__, __LINE__, ##__VA_ARGS__)
 
 enum cmp_op
 {

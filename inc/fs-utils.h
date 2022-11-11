@@ -7,6 +7,14 @@
 #include "debug/log.h"
 #include <filesystem>
 #include "regex"
+bool file_or_dir_exists(std::string path)
+{
+    return std::filesystem::exists(path);
+}
+
+void mk_dir(std::string path){
+    std::filesystem::create_directory(path);
+}
 
 file_path_t get_cwd()
 {
@@ -61,4 +69,5 @@ std::vector<file_path_t> get_files_relative_path_under_dir(const file_path_t &pa
             ret.push_back(p);
         }
     }
+    return ret;
 }

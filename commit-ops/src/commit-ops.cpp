@@ -13,14 +13,14 @@ public:
 
     const get_file_by_loc_handler_t _file_handler = [&](file_location loc)
     {
-        verbose("file handler invoked");
+        debug_verbose("file handler invoked");
         NE(loc.commit, 0);
         return this->get_file_by_loc(loc.commit, loc.file);
     };
 
     file_single_helper *get_file_by_loc(const commit_handle_t commit, file_handle_t file) // commit == 0 means find in current commit
     {
-        verbose("parent:%llu, commit:%llu, f:%llu", _commit.parent(), commit, file);
+        debug_verbose("parent:%llu, commit:%llu, f:%llu", _commit.parent(), commit, file);
         if (commit == 0)
         {
             return get_file_in_current(file);
@@ -57,7 +57,7 @@ public:
                 return nullptr;
             }
             fs->second.CheckInitialized();
-            verbose("start init helper");
+            debug_verbose("start init helper");
 
             _files.insert({file, std::make_unique<file_single_helper>(fs->second.SerializeAsString(), file, &_file_handler)});
             _commit.mutable_files()->erase(fs);
@@ -83,7 +83,7 @@ commit_helper::~commit_helper() = default;
 
 commit_helper::commit_helper(bytes_t data, const get_commit_by_loc_handler_t *handler) : _impl(std::make_unique<commit_helper_impl>())
 {
-    verbose("commit init by data");
+    debug_verbose("commit init by data");
     _impl->_is_committed = true;
     _impl->_commit_handler = handler;
     if (!_impl->_commit.ParseFromString(data))
@@ -104,7 +104,7 @@ void commit_helper::commit_file(const file_desc &fd)
     EQ(_impl->_is_committed, false);
     EQ(_impl->_files.find(fd.handle), _impl->_files.end());
     commit_handle_t file_parent_commit = 0;
-    verbose("commit parent:%llu", _impl->_commit.parent());
+    debug_verbose("commit parent:%llu", _impl->_commit.parent());
     if (_impl->get_parent())
     {
         auto p_f = _impl->get_parent()->_impl->get_file_in_current(fd.handle);
@@ -122,7 +122,7 @@ void commit_helper::commit_file(const file_desc &fd)
             file_parent_commit = _impl->_commit.parent();
         }
     }
-    verbose("file parent:%llu", file_parent_commit);
+    debug_verbose("file parent:%llu", file_parent_commit);
 
     _impl->_files.insert({fd.handle, std::unique_ptr<file_single_helper>(new file_single_helper(fd, file_parent_commit, &_impl->_file_handler))});
 }

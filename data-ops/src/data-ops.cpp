@@ -27,14 +27,14 @@ private:
     {
         NE(_file_handle, 0);
         NE(_handler, nullptr);
-        verbose("file has parent:%d handle:%llu", _file.has_parent(), _file_handle);
+        debug_verbose("file has parent:%d handle:%llu", _file.has_parent(), _file_handle);
 
         if (_file.has_parent() == false)
         {
             return nullptr;
         }
 
-        verbose("handler name:%s", _handler->target_type().name());
+        debug_verbose("handler name:%s", _handler->target_type().name());
         return (*_handler)(file_location{_file.parent(), _file_handle});
     }
 };
@@ -55,12 +55,12 @@ file_single_helper::file_single_helper(bytes_t data, file_handle_t file_handle, 
 {
     _impl->_handler = handler;
     _impl->_file_handle = file_handle;
-    // verbose("init by data, handler:%p", &handler);
+    // debug_verbose("init by data, handler:%p", &handler);
     if (!_impl->_file.ParseFromString(data))
     {
         panic("fail to parse");
     }
-    verbose("success init by data");
+    debug_verbose("success init by data");
     EQ(_impl->_file.has_binary() ^ _impl->_file.has_parent(), true);
     // _impl->set_content_hash();
 }
@@ -68,7 +68,7 @@ file_single_helper::file_single_helper(bytes_t data, file_handle_t file_handle, 
 file_single_helper::file_single_helper(const file_desc &fd, commit_handle_t commit_handle, const get_file_by_loc_handler_t *handler) : _impl(std::make_unique<file_single_helper::file_single_helper_impl>()) // from bytes to structured object
 {
 
-    verbose("init by fd");
+    debug_verbose("init by fd");
     _impl->_handler = handler;
 
     _impl->_file_handle = fd.handle;
