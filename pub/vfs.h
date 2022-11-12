@@ -31,6 +31,7 @@ public:
             stored = encrypt(stored, key);
         }
         write_binary(path, stored);
+        debug_verbose("commit store to:%s", path.c_str());
     }
     bytes_t load_committed(file_path_t path) const
     {
@@ -82,7 +83,7 @@ public:
     {
         return read_impl(handle2path(handle));
     }
-    ~vfs() = default;
+    virtual ~vfs() = default;
     std::unordered_map<file_handle_t, file_path_t> _handle2path_map;
 
     const file_handle_t path2handle(const file_path_t &path) const

@@ -20,6 +20,26 @@ protected:
         return read_binary(path);
     }
 };
+
+class meta_vfs : public vfs
+{
+public:
+    meta_vfs(const file_path_t &root_dir, const ignore_pattern_t &ignores, data_store_op op, const bytes_t &k) : vfs(root_dir, ignores, op, k){};
+
+protected:
+    void write_impl(file_path_t path, const bytes_t &data) const override
+    {
+        meta::meta meta;
+        meta.ParseFromString(data);
+        meta.CheckInitialized();
+        write_meta(path, meta);
+    }
+    bytes_t read_impl(file_path_t path) const override
+    {
+        auto meta = read_meta(path);
+        return meta.SerializeAsString();
+    }
+};
 void list_impl(const config_t &config, commit_handle_t handle)
 {
     std::cout.clear(); // temp open stdout
@@ -34,35 +54,45 @@ void list_impl(const config_t &config, commit_handle_t handle)
 void commit_impl(config_t &config)
 {
     file_path_t root = ".";
-    data_vfs vfs(root, config.ignores, config.store_op, config.key);
-    auto mgr = commit_mgr(data_prefix, &vfs);
+    data_vfs d(root, config.ignores, config.store_op, config.key);
+
+    auto mgr = commit_mgr(data_prefix, &d);
     auto new_commit = mgr.do_commit(config.commit);
-    config.commit = new_commit;
-    if (!config.enable_meta)
+
+    if (config.enable_meta)
     {
-        return;
+        meta_vfs m(root, config.ignores, config.store_op, config.key);
+        auto m_mgr = commit_mgr(meta_prefix, &m);
+        EQ(new_commit, m_mgr.do_commit(config.commit));
     }
+    config.commit = new_commit;
 }
 
 void checkout_impl(config_t &config, commit_handle_t commit, checkout_op op)
 {
     file_path_t root = ".";
-    data_vfs vfs(root, config.ignores, config.store_op, config.key);
+    data_vfs d(root, config.ignores, config.store_op, config.key);
 
-    auto mgr = commit_mgr(data_prefix, &vfs);
-    config.commit = commit;
     if (op == HARD)
     {
-        for (auto f : vfs.get_all_file_handles())
+        for (auto f : d.get_all_file_handles())
         {
-            del_file(vfs.handle2path(f));
+            del_file(d.handle2path(f));
         }
     }
+
     if (commit)
+    {
+
+        auto mgr = commit_mgr(data_prefix, &d);
         mgr.do_checkout(commit, op);
 
-    if (!config.enable_meta)
-    {
-        return;
+        if (config.enable_meta)
+        {
+            meta_vfs m(root, config.ignores, config.store_op, config.key);
+            auto m_mgr = commit_mgr(meta_prefix, &m);
+            m_mgr.do_checkout(commit, op);
+        }
     }
+    config.commit = commit;
 }

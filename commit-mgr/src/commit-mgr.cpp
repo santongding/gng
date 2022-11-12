@@ -44,8 +44,8 @@ public:
             NE(get_commit_helper(commit), nullptr);
         }
         _commits[commit_max_handle() + 1] = std::make_unique<commit_helper>(commit, &_get_commit_handler, _vfs);
-        file_path_t p = _path_prefix + commit_handle_to_str(_commits.size());
         _max_handle++;
+        file_path_t p = _path_prefix + commit_handle_to_str(commit_max_handle());
         _vfs->store_committed(p, get_commit_helper(commit_max_handle())->commit_to_bytes());
         return commit_max_handle();
     }

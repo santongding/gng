@@ -8,8 +8,29 @@
 #include <filesystem>
 #include "regex"
 #include <fstream>
+#include "meta.pb.h"
 using std::string;
 
+inline void write_meta(const string &path, const meta::meta &meta)
+{
+    auto t = std::filesystem::file_time_type::clock::from_time_t(meta.last_write_timestamp());
+
+    std::filesystem::last_write_time(path, t);
+    auto s = std::filesystem::status(path);
+    s.permissions((std::filesystem::perms)meta.permission());
+    s.type((std::filesystem::file_type)meta.file_type());
+}
+
+inline meta::meta read_meta(const string &path)
+{
+    auto s = std::filesystem::status(path);
+    meta::meta ret;
+    ret.set_permission((uint64_t)s.permissions());
+    ret.set_file_type((uint64_t)s.type());
+    ret.set_last_write_timestamp(std::filesystem::file_time_type::clock::to_time_t(std::filesystem::last_write_time(path)));
+    ret.CheckInitialized();
+    return ret;
+}
 
 inline void write_binary(const string &path, const bytes_t &data)
 {
@@ -19,6 +40,7 @@ inline void write_binary(const string &path, const bytes_t &data)
         panic("fail to open file:%s", path.c_str());
     }
     ofs.write(data.c_str(), data.size());
+    EQ(std::filesystem::exists(path), true);
 }
 inline std::string read_binary(const string &path)
 {
@@ -42,8 +64,9 @@ inline bool file_exists(std::string path)
 inline void del_file(const string &path)
 {
     EQ(file_exists(path), true);
-    if(!std::filesystem::remove(path)){
-        panic("fail to del file:%s",path.c_str());
+    if (!std::filesystem::remove(path))
+    {
+        panic("fail to del file:%s", path.c_str());
     }
 }
 inline bool mk_dir(std::string path)
