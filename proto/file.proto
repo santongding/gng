@@ -9,8 +9,6 @@ message file_binary{
 
 
 message file_single{
-  oneof file_oneof{
     file_binary binary = 1;
     uint64 parent = 2; //parent commit's handle
-  }
 }

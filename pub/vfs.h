@@ -24,18 +24,19 @@ public:
         bytes_t stored = data;
         if (enable_compress)
         {
-            stored = compress(stored);
+            stored = compress_data(stored);
         }
         if (enable_encrypt)
         {
             stored = encrypt(stored, key);
         }
         write_binary(path, stored);
-        debug_verbose("commit store to:%s", path.c_str());
+        debug_verbose("commit store to:%s, stored bits:%lu", path.c_str(), stored.size());
     }
     bytes_t load_committed(file_path_t path) const
     {
         auto ret = read_binary(path);
+        debug_verbose("load commit:%s, load bits:%lu", path.c_str(), ret.size());
         EQ(is_path_under_base(path, _root_dir), true);
 
         if (enable_encrypt)
@@ -44,8 +45,9 @@ public:
         }
         if (enable_compress)
         {
-            ret = decompress(ret);
+            ret = decompress_data(ret);
         }
+        debug_verbose("decompressed bits:%lu", ret.size());
         return ret;
     }
     vfs(const file_path_t &root_dir, const ignore_pattern_t &ignores, data_store_op store_option, const bytes_t &k) : _root_dir(root_dir), key(k)
@@ -56,7 +58,7 @@ public:
         for (auto x : paths)
         {
             _handle2path_map[path2handle(x)] = x;
-            debug_verbose("path:%s hash:%llu", x.c_str(), path2handle(x));
+            debug_verbose("path:%s hash:%lu", x.c_str(), path2handle(x));
         }
     }
     void insert_path(const file_path_t &path)

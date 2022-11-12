@@ -13,6 +13,7 @@ protected:
     void write_impl(file_path_t path, const bytes_t &data) const override
     {
         write_binary(path, data);
+        debug_verbose("write to path:%s siz:%ld", path.c_str(), data.size());
     }
     bytes_t read_impl(file_path_t path) const override
     {

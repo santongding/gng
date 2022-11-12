@@ -2,3 +2,8 @@ syntax = "proto3";
 
 package compress;
 
+message compress{
+    bytes tree_pointers = 1;
+    bytes content = 2;
+    uint64 content_bit_count = 3;
+}

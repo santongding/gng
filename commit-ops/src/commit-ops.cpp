@@ -57,7 +57,7 @@ public:
         EQ(_is_committed, false);
         EQ(_files.find(handle), _files.end());
         commit_handle_t file_parent_commit = 0;
-        debug_verbose("commit parent:%llu", _commit.parent());
+        debug_verbose("commit parent:%lu", _commit.parent());
         if (get_parent())
         {
             auto p_f = get_parent()->_impl->get_file_in_current(handle);
@@ -75,7 +75,7 @@ public:
                 file_parent_commit = _commit.parent();
             }
         }
-        debug_verbose("file parent:%llu", file_parent_commit);
+        debug_verbose("file parent:%lu", file_parent_commit);
         file_desc f{get_vfs()->read(handle), handle};
 
         _files.insert({handle, std::unique_ptr<file_single_helper>(new file_single_helper(f, file_parent_commit, &_file_handler))});
@@ -93,7 +93,7 @@ private:
 
     file_single_helper *get_file_by_loc(const commit_handle_t commit, file_handle_t file) // commit == 0 means find in current commit
     {
-        debug_verbose("parent:%llu, commit:%llu, f:%llu", _commit.parent(), commit, file);
+        debug_verbose("parent:%lu, commit:%lu, f:%lu", _commit.parent(), commit, file);
         if (commit == 0)
         {
             return get_file_in_current(file);

@@ -5,9 +5,15 @@
 
 #define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 
-#define debug(fmt, ...) fprintf(stderr, "[debug %s:%d]" fmt "\n", __FILENAME__, __LINE__, ##__VA_ARGS__)
 #define panic(fmt, ...) (fprintf(stderr, "[error %s:%d]" fmt "\n", __FILENAME__, __LINE__, ##__VA_ARGS__), assert(0))
+
+#ifdef DEBUG_OUT
+#define debug(fmt, ...) fprintf(stderr, "[debug %s:%d]" fmt "\n", __FILENAME__, __LINE__, ##__VA_ARGS__)
 #define debug_verbose(fmt, ...) fprintf(stderr, "[verbose %s:%d]" fmt "\n", __FILENAME__, __LINE__, ##__VA_ARGS__)
+#else
+#define debug(fmt, ...)
+#define debug_verbose(fmt, ...)
+#endif
 
 enum cmp_op
 {

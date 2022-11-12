@@ -9,11 +9,11 @@ void log_success_init(const config_t &ret)
 {
 
     std::cout << std::boolalpha;
-    std::cout << "current branch: " << ret.commit << std::endl;
+    std::cout << "current commit: " << ret.commit << std::endl;
     std::cout << "not-compress: " << !(ret.store_op & COMPRESSED) << std::endl;
     std::cout << "not-encrypt: " << !(ret.store_op & ENCRYPTED) << std::endl;
-    std::cout << "not-store-meta: " << !ret.enable_meta << std::endl;
-    std::cout << "init config success!" << std::endl;
+    std::cout << "not-store-meta: " << ret.enable_meta << std::endl;
+    // std::cout << "init config success!" << std::endl;
     if (!ret.verbose)
     {
         std::cout.setstate(std::ios_base::badbit);
@@ -28,6 +28,12 @@ void write_back_config(const config_t &config)
     local_config.set_commit_handle(config.commit);
     local_config.CheckInitialized();
     write_binary(local_config_path, local_config.SerializeAsString());
+    std::cout.clear();
+    std::cout << "commit after operation: " << config.commit << std::endl;
+    if (!config.verbose)
+    {
+        std::cout.setstate(std::ios_base::badbit);
+    }
 }
 static void init_ignore(config_t &config)
 {
@@ -62,7 +68,6 @@ config_t init_from_local(bytes_t key)
             std::cerr << "Key not provided!" << std::endl;
             exit(1);
         }
-        EQ(local_config.has_magic_code(), true);
         if (decrypt(local_config.magic_code(), key) != magic_code)
         {
             std::cerr << "Key not right!" << std::endl;

@@ -21,7 +21,7 @@ public:
         else
         {
             debug_verbose("got parent");
-            debug_verbose("parent has parent:%d", get_parent()->_impl->_file.has_parent());
+            debug_verbose("parent has parent:%ld", get_parent()->_impl->_file.parent());
             return get_parent()->_impl->get_content();
         }
     }
@@ -31,9 +31,9 @@ private:
     {
         NE(_file_handle, 0);
         NE(_handler, nullptr);
-        debug_verbose("file has parent:%d handle:%llu", _file.has_parent(), _file_handle);
+        debug_verbose("file has parent:%ld handle:%lu", _file.parent(), _file_handle);
 
-        if (_file.has_parent() == false || _file.parent() == 0)
+        if (_file.parent() == 0)
         {
             return nullptr;
         }
@@ -45,7 +45,7 @@ private:
 file_single_helper::~file_single_helper() = default;
 commit_handle_t file_single_helper::get_parent_commit_handle() const
 {
-    if (_impl->_file.has_parent())
+    if (_impl->_file.parent())
     {
         NE(_impl->_file.parent(), 0);
         return _impl->_file.parent();
@@ -65,7 +65,7 @@ file_single_helper::file_single_helper(bytes_t data, file_handle_t file_handle, 
         panic("fail to parse");
     }
     debug_verbose("success init by data");
-    EQ(_impl->_file.has_binary() ^ _impl->_file.has_parent(), true);
+    EQ(_impl->_file.has_binary() ^ _impl->_file.parent(), true);
     // _impl->set_content_hash();
 }
 
@@ -87,13 +87,13 @@ file_single_helper::file_single_helper(const file_desc &fd, commit_handle_t comm
         b->set_content(data);
         _impl->_file.set_allocated_binary(b);
     }
-    EQ(_impl->_file.has_binary() ^ _impl->_file.has_parent(), true);
+    EQ(_impl->_file.has_binary() & _impl->_file.parent(), false);
 }
 
 void file_single_helper::to_file(file_desc &fd) const
 {
     EQ(fd.data, "");
-    EQ(_impl->_file.has_binary() ^ _impl->_file.has_parent(), true);
+    EQ(_impl->_file.has_binary() & _impl->_file.parent(), false);
     fd.data = _impl->get_content();
     debug_verbose("content got");
 }
@@ -101,6 +101,6 @@ void file_single_helper::to_file(file_desc &fd) const
 bytes_t file_single_helper::to_bytes() const
 {
     _impl->_file.CheckInitialized();
-    EQ(_impl->_file.has_binary() ^ _impl->_file.has_parent(), true);
+    EQ(_impl->_file.has_binary() & _impl->_file.parent(), false);
     return _impl->_file.SerializeAsString();
 }

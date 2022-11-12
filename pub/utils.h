@@ -1,7 +1,6 @@
 #pragma once
 #include <vector>
 #include <type.h>
-#include "debug/log.h"
 using std::string;
 using std::vector;
 
@@ -17,6 +16,6 @@ inline bytes_hash_t get_hash(const std::string &data)
         ans0 = (ans0 * base + c) % mod0;
         ans1 = (ans1 * base + c) % mod1;
     }
-    //  debug_verbose("1:%llu 0:%llu", ans1, ans0);
+    //  debug_verbose("1:%lu 0:%lu", ans1, ans0);
     return (ans0 << 32) | ans1;
 }

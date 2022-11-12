@@ -38,7 +38,7 @@ public:
     }
     commit_handle_t do_commit(commit_handle_t commit)
     {
-        debug_verbose("do commit, parent:%llu", commit);
+        debug_verbose("do commit, parent:%lu", commit);
         if (commit)
         {
             NE(get_commit_helper(commit), nullptr);
@@ -93,11 +93,11 @@ public:
             } while (commit);
         }
         std::cout << "listing current not ignored files:" << std::endl;
-        std::cout << std::setw(16) << "file handle" << std::setw(16) << "path" << std::endl;
+        std::cout << std::setw(16) << "file handle" << std::setw(16) << "\t\t" << "path" << std::endl;
         auto handles = _vfs->get_all_file_handles();
         for (auto i = 0; i < handles.size(); i++)
         {
-            std::cout << std::setw(16) << std::hex << handles[i] << std::setw(16) << _vfs->handle2path(handles[i]) << std::endl;
+            std::cout << std::setw(16) << std::hex << handles[i] << std::setw(16) << "\t\t" << _vfs->handle2path(handles[i]) << std::endl;
         }
     }
 
@@ -119,7 +119,7 @@ private:
     {
         if (handle > commit_max_handle())
         {
-            panic("commit handle:%llu not found", handle);
+            panic("commit handle:%lu not found", handle);
         }
         else
         {
@@ -156,7 +156,7 @@ void commit_mgr::do_checkout(commit_handle_t commit, checkout_op op)
 {
     if (commit > _impl->commit_max_handle())
     {
-        panic("handle:%llu not found", commit);
+        panic("handle:%lu not found", commit);
     }
     if (op != SOFT)
     {

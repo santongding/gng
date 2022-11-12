@@ -11,11 +11,20 @@
 #include "meta.pb.h"
 using std::string;
 
+using ft = std::filesystem::file_time_type;
+template <typename TP>
+inline std::time_t to_time_t(TP tp)
+{
+    using namespace std::chrono;
+    auto sctp = time_point_cast<system_clock::duration>(tp - TP::clock::now() + system_clock::now());
+    return system_clock::to_time_t(sctp);
+}
+
 inline void write_meta(const string &path, const meta::meta &meta)
 {
-    auto t = std::filesystem::file_time_type::clock::from_time_t(meta.last_write_timestamp());
 
-    std::filesystem::last_write_time(path, t);
+    // auto t = std::chrono::system_clock::from_time_t(meta.last_write_timestamp());
+    // std::filesystem::last_write_time(path, ft(t));
     auto s = std::filesystem::status(path);
     s.permissions((std::filesystem::perms)meta.permission());
     s.type((std::filesystem::file_type)meta.file_type());
@@ -27,7 +36,9 @@ inline meta::meta read_meta(const string &path)
     meta::meta ret;
     ret.set_permission((uint64_t)s.permissions());
     ret.set_file_type((uint64_t)s.type());
-    ret.set_last_write_timestamp(std::filesystem::file_time_type::clock::to_time_t(std::filesystem::last_write_time(path)));
+    // auto ftime = std::filesystem::last_write_time(path);
+    // std::time_t cftime = decltype(ftime)::clock::to_time_t(ftime);
+    // ret.set_last_write_timestamp(to_time_t(ftime));
     ret.CheckInitialized();
     return ret;
 }

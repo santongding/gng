@@ -3,7 +3,7 @@ syntax = "proto3";
 package meta;
 
 message meta{
-    uint64 last_write_timestamp = 1;
+   // uint64 last_write_timestamp = 1;
     uint64 permission = 2;
     uint64 file_type = 3;
 
