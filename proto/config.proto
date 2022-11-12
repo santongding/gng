@@ -9,4 +9,5 @@ message config{
     bool enable_encrypt = 3;
     bool enable_meta = 4;
     bool verbose = 5;
+    optional bytes magic_code = 6;
 }

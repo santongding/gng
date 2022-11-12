@@ -11,13 +11,17 @@ public:
 
     const bytes_t &get_content()
     {
-        if (get_parent() == NULL)
+        debug_verbose("parent:%p", get_parent());
+        if (get_parent() == nullptr)
         {
             EQ(_file.has_binary(), true);
+            debug_verbose("has binary");
             return _file.binary().content();
         }
         else
         {
+            debug_verbose("got parent");
+            debug_verbose("parent has parent:%d", get_parent()->_impl->_file.has_parent());
             return get_parent()->_impl->get_content();
         }
     }
@@ -29,7 +33,7 @@ private:
         NE(_handler, nullptr);
         debug_verbose("file has parent:%d handle:%llu", _file.has_parent(), _file_handle);
 
-        if (_file.has_parent() == false)
+        if (_file.has_parent() == false || _file.parent() == 0)
         {
             return nullptr;
         }
@@ -88,8 +92,10 @@ file_single_helper::file_single_helper(const file_desc &fd, commit_handle_t comm
 
 void file_single_helper::to_file(file_desc &fd) const
 {
-    EQ(fd.data,"");
+    EQ(fd.data, "");
+    EQ(_impl->_file.has_binary() ^ _impl->_file.has_parent(), true);
     fd.data = _impl->get_content();
+    debug_verbose("content got");
 }
 
 bytes_t file_single_helper::to_bytes() const

@@ -5,6 +5,6 @@ package data;
 
 
 message commit{
-    map<uint64, file_single> files = 1;
+    map<string, file_single> files = 1;
     uint64 parent = 2;
 }

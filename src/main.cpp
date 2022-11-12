@@ -93,12 +93,14 @@ int main(int argc, char **argv)
 void Init(const std::string &progname, std::vector<std::string>::const_iterator beginargs, std::vector<std::string>::const_iterator endargs)
 {
     std::cout << "Execute init" << std::endl;
-    args::ArgumentParser parser("");
+    args::ArgumentParser parser("This command is used to init .gng as repository");
     parser.Prog(progname + " init");
     args::HelpFlag help(parser, "help", "Display this help menu", {'h', "help"});
     args::Flag not_compress(parser, "not-compress", "Do not compress the data", {"not-compress"});
     args::Flag not_encrypt(parser, "not-encrypt", "Do not encrypt the data", {"not-encrypt"});
     args::Flag not_store_meta(parser, "not-store-meta", "Do not store metadata", {"not-store-meta"});
+    args::ValueFlag<std::string> key(parser, "key", "Key to encrypt data. This value will be ignored if disable encryption", {'k', "key"});
+
     try
     {
         parser.ParseArgs(beginargs, endargs);
@@ -112,7 +114,7 @@ void Init(const std::string &progname, std::vector<std::string>::const_iterator 
         {
             EQ(mk_dir(".gng"), true);
         }
-        EQ(init(not_compress, not_encrypt, not_store_meta, verbose_value), true);
+        EQ(init(not_compress, not_encrypt, not_store_meta, verbose_value, args::get(key)), true);
     }
     catch (args::Help)
     {
@@ -129,31 +131,18 @@ void Init(const std::string &progname, std::vector<std::string>::const_iterator 
 
 void Commit(const std::string &progname, std::vector<std::string>::const_iterator beginargs, std::vector<std::string>::const_iterator endargs)
 {
-    std::cout << "In Add" << std::endl;
-    args::ArgumentParser parser("");
-    parser.Prog(progname + " add");
+    std::cout << "Execute commit" << std::endl;
+    args::ArgumentParser parser("This command will store all non-ignored files to a commit whose parent commit is current one");
+    parser.Prog(progname + " commit");
     args::HelpFlag help(parser, "help", "Display this help menu", {'h', "help"});
-    args::Flag dryrun(parser, "dryrun", "dry run", {'n', "dry-run"});
-    args::Flag verbose(parser, "verbose", "be verbose", {'v', "verbose"});
-    args::Flag refresh(parser, "refresh", "Don't add, only refresh the index", {"refresh"});
-    args::PositionalList<std::string> pathspec(parser, "pathspec", "pathspecs");
+    args::ValueFlag<std::string> key(parser, "key", "Key to encrypt data. This value will be ignored if disable encryption", {'k', "key"});
+
     try
     {
         parser.ParseArgs(beginargs, endargs);
-        std::cout << std::boolalpha;
-        std::cout << "dryrun: " << bool{dryrun} << std::endl;
-        ;
-        std::cout << "verbose: " << bool{verbose} << std::endl;
-        std::cout << "refresh: " << bool{refresh} << std::endl;
-        std::cout << "pathspec: " << bool{pathspec} << std::endl;
-        if (pathspec)
-        {
-            std::cout << "values: " << std::endl;
-            for (const auto &spec : args::get(pathspec))
-            {
-                std::cout << " - " << spec << std::endl;
-            }
-        }
+        auto config = init_from_local(args::get(key));
+        commit_impl(config);
+        write_back_config(config);
     }
     catch (args::Help)
     {
@@ -170,22 +159,49 @@ void Commit(const std::string &progname, std::vector<std::string>::const_iterato
 
 void Checkout(const std::string &progname, std::vector<std::string>::const_iterator beginargs, std::vector<std::string>::const_iterator endargs)
 {
-    std::cout << "In Init" << std::endl;
-    args::ArgumentParser parser("");
-    parser.Prog(progname + " init");
+    std::cout << "Execute checkout" << std::endl;
+    args::ArgumentParser parser("This command will restore files in certain commit and setup head commit. Default use soft checkout, which will do nothing to the filesystem");
+    parser.Prog(progname + " checkout");
     args::HelpFlag help(parser, "help", "Display this help menu", {'h', "help"});
-    args::ValueFlag<std::string> templatedir(parser, "template-directory", "directory from which templates will be used", {"template"});
-    args::Flag bare(parser, "bare", "create a bare repository", {"bare"});
-    args::Flag quiet(parser, "quiet", "be quiet", {'q', "quiet"});
-    args::Positional<std::string> directory(parser, "directory", "The directory to create in", ".");
+    args::Positional<std::string> cmt(parser, "commit", "The commit to checkout", ".");
+    // args::Positional<std::string> cmt(parser, "commit", "commit to checkout", {'c', "commit"});
+    args::Flag hard_checkout(parser, "hard-checkout", "Keep files in your filesystem same with the commit", {"hard"});
+    args::Flag mixed_checkout(parser, "mixed-checkout", "Restore all files in the commit and do not delete uncontrolled flies", {"mixed"});
+
+    args::ValueFlag<std::string> key(parser, "key", "Key to encrypt data. This value will be ignored if disable encryption", {'k', "key"});
+
     try
     {
         parser.ParseArgs(beginargs, endargs);
         std::cout << std::boolalpha;
-        std::cout << "templatedir: " << bool{templatedir} << ", value: " << args::get(templatedir) << std::endl;
-        std::cout << "bare: " << bool{bare} << std::endl;
-        std::cout << "quiet: " << bool{quiet} << std::endl;
-        std::cout << "directory: " << bool{directory} << ", value: " << args::get(directory) << std::endl;
+        if (bool{hard_checkout} && bool{mixed_checkout})
+        {
+            std::cerr << "please select one option" << std::endl;
+            return;
+        }
+        if (!bool{cmt})
+        {
+            std::cerr << "commit not specified" << std::endl;
+            return;
+        }
+        auto config = init_from_local(args::get(key));
+        checkout_op op = SOFT;
+        if (bool{hard_checkout})
+            op = HARD;
+        if (bool{mixed_checkout})
+            op = MIXED;
+        commit_handle_t c;
+        try
+        {
+            c = stoi(args::get(cmt));
+        }
+        catch (...)
+        {
+            std::cerr << "commit should be number" << std::endl;
+            return;
+        }
+        checkout_impl(config, c, op);
+        write_back_config(config);
     }
     catch (args::Help)
     {
@@ -203,17 +219,19 @@ void Checkout(const std::string &progname, std::vector<std::string>::const_itera
 void List(const std::string &progname, std::vector<std::string>::const_iterator beginargs, std::vector<std::string>::const_iterator endargs)
 {
     std::cout << "Execute list" << std::endl;
-    args::ArgumentParser parser("");
-    parser.Prog(progname + " init");
+    args::ArgumentParser parser("This command is used to list commits");
+    parser.Prog(progname + " list");
     args::HelpFlag help(parser, "help", "Display this help menu", {'h', "help"});
     args::ValueFlag<std::uint64_t> listed_commit(parser, "listed-commit", "List the commit and all its ancestors. If not presented, will list all commits", {'l', "listed-commit"});
+    args::ValueFlag<std::string> key(parser, "key", "Key to encrypt data. This value will be ignored if disable encryption", {'k', "key"});
+
     // args::Flag bare(parser, "bare", "create a bare repository", {"bare"});
     // args::Flag quiet(parser, "quiet", "be quiet", {'q', "quiet"});
     // args::Positional<std::string> directory(parser, "directory", "The directory to create in", ".");
     try
     {
         parser.ParseArgs(beginargs, endargs);
-        auto config = init_from_local();
+        auto config = init_from_local(args::get(key));
         std::cout << std::boolalpha;
         std::cout << "listed-commit: " << bool{listed_commit} << ", value: " << args::get(listed_commit) << std::endl;
         list_impl(config, args::get(listed_commit));

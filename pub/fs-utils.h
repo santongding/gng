@@ -9,6 +9,8 @@
 #include "regex"
 #include <fstream>
 using std::string;
+
+
 inline void write_binary(const string &path, const bytes_t &data)
 {
     std::ofstream ofs(path, std::ios::binary | std::ios::out);
@@ -37,6 +39,13 @@ inline bool file_exists(std::string path)
     return std::filesystem::is_regular_file(path);
 }
 
+inline void del_file(const string &path)
+{
+    EQ(file_exists(path), true);
+    if(!std::filesystem::remove(path)){
+        panic("fail to del file:%s",path.c_str());
+    }
+}
 inline bool mk_dir(std::string path)
 {
     return std::filesystem::create_directory(path);
@@ -55,18 +64,27 @@ inline std::regex gen_regex(std::string arg)
 
     return std::regex(arg);
 }
-
-inline void normalize_path(file_path_t &path, const file_path_t &base)
+inline bool is_path_under_base(const file_path_t &path, const file_path_t &base)
 {
     auto relative = (std::string)std::filesystem::relative(path, base);
-    if (relative.size() == 1 || relative[0] != '.' && relative[1] != '.')
+    // debug("path:%s, base:%s relative:%s", path.c_str(), base.c_str(), relative.c_str());
+
+    if (relative.size() == 2 && relative[0] == '.' && relative[1] == '.')
+        return false;
+    if (relative.size() < 3 || !(relative[0] == '.' && relative[1] == '.' && relative[2] == '/'))
     {
-        path = relative;
+        return true;
     }
     else
     {
-        panic("path:%s is out of base:%s", path.c_str(), base.c_str());
+        return false;
     }
+}
+
+inline void normalize_path(file_path_t &path, const file_path_t &base)
+{
+    EQ(is_path_under_base(path, base), true);
+    path = (std::string)std::filesystem::relative(path, base);
 }
 
 inline bool is_path_ignored(const file_path_t &path, const ignore_pattern_t &ignore)
@@ -92,6 +110,7 @@ inline std::vector<file_path_t> get_files_relative_path_under_dir(const file_pat
             normalize_path(p, path);
             if (is_path_ignored(p, ignore))
                 continue;
+            // debug_verbose("file found:%s", i->path().c_str());
             ret.push_back(p);
         }
     }

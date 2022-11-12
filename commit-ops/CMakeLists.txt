@@ -3,4 +3,4 @@ link_lib(data-ops)
 
 enable_testing()
 
-do_test(commit 0)
+# do_test(commit 0)

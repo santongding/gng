@@ -12,6 +12,7 @@ typedef std::vector<std::regex> ignore_pattern_t;
 typedef std::string file_path_t;
 typedef struct
 {
+    bytes_t data;
     const file_handle_t handle;
 } file_desc;
 
@@ -30,4 +31,17 @@ struct file_location
 {
     commit_handle_t commit;
     file_handle_t file;
+};
+
+
+enum checkout_op{
+    SOFT,
+    HARD,
+    MIXED,
+};
+
+
+enum data_store_op{
+    COMPRESSED = 1,
+    ENCRYPTED = 2,
 };

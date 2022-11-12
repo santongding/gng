@@ -68,5 +68,5 @@ int main()
         EQ(i.second.has_binary(), false);
         EQ(i.second.parent(), 1);
     }
-
 }
+
