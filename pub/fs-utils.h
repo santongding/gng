@@ -45,6 +45,8 @@ inline meta::meta read_meta(const string &path)
 
 inline void write_binary(const string &path, const bytes_t &data)
 {
+    if (std::filesystem::path(path).filename() != path)
+        std::filesystem::create_directories(std::filesystem::path(path).parent_path());
     std::ofstream ofs(path, std::ios::binary | std::ios::out);
     if (!ofs)
     {
