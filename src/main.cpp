@@ -3,6 +3,8 @@
 #include "args.hxx"
 #include "config.h"
 #include "fs-utils.h"
+#include "file-lock.h"
+#include "commands-impl.h"
 
 void Init(const std::string &progname, std::vector<std::string>::const_iterator beginargs, std::vector<std::string>::const_iterator endargs);
 void Commit(const std::string &progname, std::vector<std::string>::const_iterator beginargs, std::vector<std::string>::const_iterator endargs);
@@ -14,6 +16,7 @@ bool verbose_value;
 
 int main(int argc, char **argv)
 {
+
     std::unordered_map<std::string, commandtype> map{
         {"init", Init},
         {"commit", Commit},
@@ -41,6 +44,9 @@ int main(int argc, char **argv)
     // args::ValueFlag<std::string> htmlpath(parser, "html-path", "Specify the html path", {"html-path"});
     args::MapPositional<std::string, commandtype> command(parser, "command", "Command to execute", map);
     command.KickOut(true);
+    // exclusive_lock_file lock("gng-private-file-lock");
+    exclusive_lock_file _lock("/tmp/gng-private-file-lock");
+
     try
     {
         auto next = parser.ParseArgs(args);
@@ -52,6 +58,7 @@ int main(int argc, char **argv)
             std::cout << "Verbose: " << bool{verbose} << std::endl;
 
             verbose_value = bool{verbose};
+
             args::get(command)(argv[0], next, std::end(args));
         }
         else
@@ -79,36 +86,33 @@ int main(int argc, char **argv)
         std::cerr << parser;
         return 1;
     }
+
     return 0;
 }
 
 void Init(const std::string &progname, std::vector<std::string>::const_iterator beginargs, std::vector<std::string>::const_iterator endargs)
 {
-    std::cout << "In init" << std::endl;
+    std::cout << "Execute init" << std::endl;
     args::ArgumentParser parser("");
     parser.Prog(progname + " init");
     args::HelpFlag help(parser, "help", "Display this help menu", {'h', "help"});
-    args::Flag not_compress(parser, "not-compress", "do not compress the data", {"not-compress"});
-    args::Flag not_encrypt(parser, "not-encrypt", "do not encrypt the data", {"not-encrypt"});
+    args::Flag not_compress(parser, "not-compress", "Do not compress the data", {"not-compress"});
+    args::Flag not_encrypt(parser, "not-encrypt", "Do not encrypt the data", {"not-encrypt"});
+    args::Flag not_store_meta(parser, "not-store-meta", "Do not store metadata", {"not-store-meta"});
     try
     {
         parser.ParseArgs(beginargs, endargs);
 
-        if (file_or_dir_exists(".gng"))
+        if (dir_exists(".gng"))
         {
             std::cerr << "directory \".gng\" exists, please remove it before init" << std::endl;
             return;
         }
         else
         {
-            mk_dir(".gng");
+            EQ(mk_dir(".gng"), true);
         }
-        auto ret = init(not_compress, not_encrypt, verbose_value);
-
-        std::cout << std::boolalpha;
-        std::cout << "not-compress: " << !ret.enable_compress << std::endl;
-        std::cout << "not-encrypt: " << !ret.enable_compress << std::endl;
-        std::cout << "init success!" << std::endl;
+        EQ(init(not_compress, not_encrypt, not_store_meta, verbose_value), true);
     }
     catch (args::Help)
     {
@@ -198,22 +202,21 @@ void Checkout(const std::string &progname, std::vector<std::string>::const_itera
 
 void List(const std::string &progname, std::vector<std::string>::const_iterator beginargs, std::vector<std::string>::const_iterator endargs)
 {
-    std::cout << "In Init" << std::endl;
+    std::cout << "Execute list" << std::endl;
     args::ArgumentParser parser("");
     parser.Prog(progname + " init");
     args::HelpFlag help(parser, "help", "Display this help menu", {'h', "help"});
-    args::ValueFlag<std::string> templatedir(parser, "template-directory", "directory from which templates will be used", {"template"});
-    args::Flag bare(parser, "bare", "create a bare repository", {"bare"});
-    args::Flag quiet(parser, "quiet", "be quiet", {'q', "quiet"});
-    args::Positional<std::string> directory(parser, "directory", "The directory to create in", ".");
+    args::ValueFlag<std::uint64_t> listed_commit(parser, "listed-commit", "List the commit and all its ancestors. If not presented, will list all commits", {'l', "listed-commit"});
+    // args::Flag bare(parser, "bare", "create a bare repository", {"bare"});
+    // args::Flag quiet(parser, "quiet", "be quiet", {'q', "quiet"});
+    // args::Positional<std::string> directory(parser, "directory", "The directory to create in", ".");
     try
     {
         parser.ParseArgs(beginargs, endargs);
+        auto config = init_from_local();
         std::cout << std::boolalpha;
-        std::cout << "templatedir: " << bool{templatedir} << ", value: " << args::get(templatedir) << std::endl;
-        std::cout << "bare: " << bool{bare} << std::endl;
-        std::cout << "quiet: " << bool{quiet} << std::endl;
-        std::cout << "directory: " << bool{directory} << ", value: " << args::get(directory) << std::endl;
+        std::cout << "listed-commit: " << bool{listed_commit} << ", value: " << args::get(listed_commit) << std::endl;
+        list_impl(config, args::get(listed_commit));
     }
     catch (args::Help)
     {

@@ -56,20 +56,25 @@ endmacro()
 
 
 
-include_directories("${PROJECT_SOURCE_DIR}/inc")
+include_directories("${PROJECT_SOURCE_DIR}/pub")
 
 
 # add_subdirectory("commit-ops")
 add_subdirectory("proto")
 add_subdirectory("data-ops")
 add_subdirectory("commit-ops")
+add_subdirectory("commit-mgr")
 
 
-add_executable(gng src/main.cpp src/config.cpp)
+aux_source_directory("./src" main_src)
+message(NOTICE "main src: ${main_src}")
+add_executable(gng ${main_src})
+
+target_include_directories(gng PRIVATE "${PROJECT_SOURCE_DIR}/inc")
 
 link_lib(proto)
 
-link_lib(data-ops)
+link_lib(commit-mgr)
 
 enable_testing()
 

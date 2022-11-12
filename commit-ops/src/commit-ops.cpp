@@ -99,6 +99,11 @@ commit_helper::commit_helper(commit_handle_t parent, const get_commit_by_loc_han
     _impl->_commit.set_parent(parent);
 }
 
+commit_handle_t commit_helper::get_parent()
+{
+    return _impl->_commit.parent();
+}
+
 void commit_helper::commit_file(const file_desc &fd)
 {
     EQ(_impl->_is_committed, false);

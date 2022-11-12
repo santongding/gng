@@ -12,7 +12,6 @@ typedef std::vector<std::regex> ignore_pattern_t;
 typedef std::string file_path_t;
 typedef struct
 {
-    bytes_t data;
     const file_handle_t handle;
 } file_desc;
 
