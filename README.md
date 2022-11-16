@@ -7,6 +7,10 @@
 - 增量备份: 5 完成
 - 元数据支持: 10 完成
 
+# tested platform
+- macOS 12.6(aarch64)
+- ubuntu 20.04(amd64)
+
 # build
 ## requirements
 - CMAKE 3.16
