@@ -26,8 +26,10 @@ inline void write_meta(const string &path, const meta::meta &meta)
     // auto t = std::chrono::system_clock::from_time_t(meta.last_write_timestamp());
     // std::filesystem::last_write_time(path, ft(t));
     auto s = std::filesystem::status(path);
-    s.permissions((std::filesystem::perms)meta.permission());
+    std::filesystem::permissions(path, (std::filesystem::perms)meta.permission(), std::filesystem::perm_options::replace);
+    // s.permissions();
     s.type((std::filesystem::file_type)meta.file_type());
+    debug_verbose("perm:%o at: %s",meta.permission(), path.c_str());
 }
 
 inline meta::meta read_meta(const string &path)
