@@ -39,7 +39,7 @@ endfunction()
 
 macro(link_lib lib_name)
    message(NOTICE "${PROJECT_NAME} ${lib_name}-lib")
-    target_link_libraries(${PROJECT_NAME} PRIVATE ${lib_name}-lib)
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${lib_name}-lib)
     # target_link_directories(${PROJECT_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/${lib_name}/pub")
 endmacro()
 

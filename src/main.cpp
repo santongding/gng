@@ -65,7 +65,7 @@ int main(int argc, char **argv)
         {
             if (version)
             {
-                std::cout << "gng(Gng Not Git) version 1.0.0" << std::endl;
+                std::cout << "gng(Gng‘s Not Git) version 1.0.0" << std::endl;
             }
             else
             {
