@@ -49,7 +49,7 @@ macro(init_lib lib_name version_id)
     message(NOTICE ${${lib_name}-src})
     set(pub_inc ${CMAKE_CURRENT_SOURCE_DIR}/pub)
     include_directories(${pub_inc} "${CMAKE_CURRENT_SOURCE_DIR}/inc")
-    add_library(${lib_name}-lib SHARED ${${lib_name}-src})
+    add_library(${lib_name}-lib STATIC ${${lib_name}-src})
     target_include_directories(${lib_name}-lib PUBLIC ${pub_inc})
 
 endmacro()
